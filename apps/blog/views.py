@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import Post
 from django.shortcuts import redirect
 from .forms import PostForm
+from django.contrib.auth.decorators import login_required
 
 
 def home_page(request):
@@ -19,6 +20,7 @@ def post_detail(request, pk):
     return render(request, 'pages/post_detail.html', {'post': post})
 
 
+@login_required
 def post_add(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
