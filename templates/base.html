@@ -42,11 +42,10 @@
                         <li class="nav-item">
                             <span class="nav-link text-white">Привет, {{ user.username }}!</span>
                         </li>
-                        <!-- Добавлена кнопка безопасного выхода (POST-запрос нужен для Django 4.1+) -->
                         <li class="nav-item">
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-link nav-link" style="text-decoration: none;">Выход</button>
+                                <button type="submit" class="btn btn-link nav-link text-white text-decoration-none">Выход</button>
                             </form>
                         </li>
                     {% else %}
