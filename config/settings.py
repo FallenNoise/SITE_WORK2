@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'apps.blog',
     'django_bootstrap_icons',
     'apps.users',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
