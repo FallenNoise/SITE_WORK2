@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="mb-4">
+        <h1>Профиль пользователя: {{ profile_user.username }}</h1>
+        <p>Всего публикаций: {{ posts.count }}</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            {% for post in posts %}
+                {% include 'includes/post_card.html' %}
+            {% empty %}
+                <p class="text-muted">Пользователь пока не добавил ни одного поста.</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
