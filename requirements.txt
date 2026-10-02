@@ -5,3 +5,4 @@ tzdata==2026.4
 django-bootstrap-icons
 ipython
 django-extensions
+Pillow
