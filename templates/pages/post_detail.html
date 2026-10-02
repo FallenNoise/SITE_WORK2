@@ -2,6 +2,8 @@
 {% block content %}
     <h1>{{ post.title }}</h1>
     <p><i>{{ post.created_at }}</i></p>
+    <!-- Добавлена строка с автором -->
+    <p><b>Автор:</b> {{ post.author.username|default:"Неизвестен" }}</p>
     <p>{{ post.text }}</p>
     <a href="{% url 'post_edit' post.pk %}">Редактировать</a> | 
     <a href="{% url 'post_delete' post.pk %}">Удалить</a>
