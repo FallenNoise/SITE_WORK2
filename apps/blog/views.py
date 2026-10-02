@@ -3,6 +3,7 @@ from .models import Post
 from django.shortcuts import redirect
 from .forms import PostForm
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
 
 
 def home_page(request):
@@ -37,8 +38,14 @@ def post_add(request):
     return render(request, 'pages/post_form.html', {'form': form})
 
 
+@login_required
 def post_edit(request, pk):
     post = get_object_or_404(Post, pk=pk)
+
+    # Проверка: является ли текущий пользователь автором поста?
+    if post.author != request.user:
+        return HttpResponseForbidden("Вы не можете редактировать чужой пост.")
+
     if request.method == 'POST':
         form = PostForm(request.POST, instance=post)
         if form.is_valid():
@@ -49,8 +56,14 @@ def post_edit(request, pk):
     return render(request, 'pages/post_form.html', {'form': form})
 
 
+@login_required
 def post_delete(request, pk):
     post = get_object_or_404(Post, pk=pk)
+
+    # Проверка: является ли текущий пользователь автором поста?
+    if post.author != request.user:
+        return HttpResponseForbidden("Вы не можете удалить чужой пост.")
+
     if request.method == 'POST':
         post.delete()
         return redirect('post_list')
