@@ -25,7 +25,12 @@ def post_add(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
         if form.is_valid():
-            form.save()
+            # Сохраняем форму, но пока не отправляем в БД (commit=False)
+            post = form.save(commit=False)
+            # Присваиваем текущего пользователя в качестве автора
+            post.author = request.user
+            # Теперь сохраняем в БД
+            post.save()
             return redirect('home')
     else:
         form = PostForm()
