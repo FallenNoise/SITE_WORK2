@@ -6,3 +6,4 @@ django-bootstrap-icons
 ipython
 django-extensions
 Pillow
+unidecode
