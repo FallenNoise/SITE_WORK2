@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.urls import reverse  # ДОБАВЛЕНО: функция reverse
 from unidecode import unidecode
 
 
@@ -13,6 +14,10 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    # ДОБАВЛЕНО: получение ссылки на категорию
+    def get_absolute_url(self):
+        return reverse('category_posts', kwargs={'slug': self.slug})
 
 
 class Post(models.Model):
@@ -29,7 +34,6 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
-    # Связь с категорией
     category = models.ForeignKey(Category, on_delete=models.SET_NULL,
                                  null=True, blank=True, related_name='posts', verbose_name="Категория")
 
@@ -38,6 +42,10 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    # ДОБАВЛЕНО: получение ссылки на сам пост
+    def get_absolute_url(self):
+        return reverse('post_detail', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):
         if not self.slug:
