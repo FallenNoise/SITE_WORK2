@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from .models import Post
 from .forms import PostForm
+from .models import Post, Category
 
 
 def home_page(request):
@@ -18,6 +19,12 @@ def post_list(request):
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug)
     return render(request, 'pages/post_detail.html', {'post': post})
+
+
+def category_posts(request, slug):
+    category = get_object_or_404(Category, slug=slug)
+    posts = Post.objects.filter(category=category, status='published')
+    return render(request, 'pages/post_list.html', {'posts': posts, 'category': category})
 
 
 @login_required
