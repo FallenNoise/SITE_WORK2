@@ -1,6 +1,7 @@
 <div class="post-card card mb-3 p-3 shadow-sm">
     <h2>
-        <a href="{% url 'post_detail' post.pk %}" class="text-decoration-none text-dark">{{ post.title }}</a>
+        <!-- Изменено post.pk на post.slug -->
+        <a href="{% url 'post_detail' post.slug %}" class="text-decoration-none text-dark">{{ post.title }}</a>
     </h2>
     {% if post.author %}
         <p class="text-muted mb-0">

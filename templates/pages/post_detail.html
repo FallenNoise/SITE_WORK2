@@ -21,8 +21,10 @@
         
         {% if request.user == post.author %}
         <div class="mt-3">
-            <a href="{% url 'post_edit' post.pk %}" class="btn btn-outline-secondary btn-sm">Редактировать</a>
-            <a href="{% url 'post_delete' post.pk %}" class="btn btn-outline-danger btn-sm">Удалить</a>
+            <!-- Изменено post.pk на post.slug -->
+            <a href="{% url 'post_edit' post.slug %}" class="btn btn-outline-secondary btn-sm">Редактировать</a>
+            <!-- Изменено post.pk на post.slug -->
+            <a href="{% url 'post_delete' post.slug %}" class="btn btn-outline-danger btn-sm">Удалить</a>
         </div>
         {% endif %}
     </div>
