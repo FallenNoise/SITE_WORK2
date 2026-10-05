@@ -4,13 +4,23 @@ from django.utils.text import slugify
 from unidecode import unidecode
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Название категории")
+    slug = models.SlugField(max_length=100, unique=True)
+
+    class Meta:
+        verbose_name_plural = "Категории"
+
+    def __str__(self):
+        return self.name
+
+
 class Post(models.Model):
     STATUS_CHOICES = (
         ('draft', 'Черновик'),
         ('published', 'Опубликован'),
     )
     title = models.CharField(max_length=200)
-    # Добавлено поле slug
     slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
     text = models.TextField()
     image = models.ImageField(upload_to='posts_images/', null=True, blank=True)
@@ -19,6 +29,9 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
+    # Связь с категорией
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL,
+                                 null=True, blank=True, related_name='posts', verbose_name="Категория")
 
     class Meta:
         ordering = ['-created_at']
@@ -26,7 +39,6 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
-    # Автоматическая генерация слага из заголовка
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(unidecode(self.title))
