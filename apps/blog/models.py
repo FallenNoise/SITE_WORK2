@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
-from django.urls import reverse  # ДОБАВЛЕНО: функция reverse
+from django.urls import reverse
 from unidecode import unidecode
 
 
@@ -15,9 +15,18 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-    # ДОБАВЛЕНО: получение ссылки на категорию
     def get_absolute_url(self):
         return reverse('category_posts', kwargs={'slug': self.slug})
+
+# ДОБАВЛЕНО: Модель Тега
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50)
+    slug = models.SlugField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Post(models.Model):
@@ -37,13 +46,16 @@ class Post(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL,
                                  null=True, blank=True, related_name='posts', verbose_name="Категория")
 
+    # ДОБАВЛЕНО: Поле тегов (многие-ко-многим). blank=True позволяет постам быть без тегов.
+    tags = models.ManyToManyField(
+        Tag, blank=True, related_name='posts', verbose_name="Теги")
+
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return self.title
 
-    # ДОБАВЛЕНО: получение ссылки на сам пост
     def get_absolute_url(self):
         return reverse('post_detail', kwargs={'slug': self.slug})
 

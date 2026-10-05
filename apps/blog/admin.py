@@ -1,9 +1,16 @@
 from django.contrib import admin
-from .models import Post, Category
+from .models import Post, Category, Tag
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug': ('name',)}
+
+# ДОБАВЛЕНО: Регистрация тегов
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 
