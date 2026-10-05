@@ -1,7 +1,11 @@
+from django import forms
+from .models import Post
+
+
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        # Добавили category
+        # Убедитесь, что 'category' добавлена из предыдущей фазы
         fields = ['title', 'text', 'category', 'image', 'status']
         labels = {
             'title': 'Заголовок',
@@ -9,6 +13,11 @@ class PostForm(forms.ModelForm):
             'category': 'Категория',
             'image': 'Изображение',
             'status': 'Статус',
+        }
+        # ДОБАВЛЕНО: Тексты-подсказки (help_texts)
+        help_texts = {
+            'title': 'Придумайте цепляющий заголовок',
+            'image': 'Загрузите обложку поста (необязательно)',
         }
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
