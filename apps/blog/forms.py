@@ -1,16 +1,25 @@
 from django import forms
 from .models import Post
 
+
 class PostForm(forms.ModelForm):
+    # Добавлено текстовое поле для ручного ввода тегов
+    tags_input = forms.CharField(
+        required=False,
+        label='Теги',
+        help_text='Введите теги через запятую (например: django, python, web)',
+        widget=forms.TextInput(
+            attrs={'class': 'form-control', 'placeholder': 'тег1, тег2...'})
+    )
+
     class Meta:
         model = Post
-        # ДОБАВЛЕНО: 'tags' в fields
-        fields = ['title', 'text', 'category', 'tags', 'image', 'status'] 
+        # Поле 'tags' убрано, так как обрабатывается вручную
+        fields = ['title', 'text', 'category', 'image', 'status']
         labels = {
             'title': 'Заголовок',
             'text': 'Текст',
             'category': 'Категория',
-            'tags': 'Теги', # ДОБАВЛЕНО
             'image': 'Изображение',
             'status': 'Статус',
         }
@@ -22,8 +31,13 @@ class PostForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'text': forms.Textarea(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
-            # ДОБАВЛЕНО: SelectMultiple позволяет зажать Ctrl (Windows) и выбрать несколько тегов сразу
-            'tags': forms.SelectMultiple(attrs={'class': 'form-control'}), 
             'image': forms.FileInput(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Если пост редактируется, подтягиваем его существующие теги в строку
+        if self.instance and self.instance.pk:
+            self.fields['tags_input'].initial = ', '.join(
+                [tag.name for tag in self.instance.tags.all()])
