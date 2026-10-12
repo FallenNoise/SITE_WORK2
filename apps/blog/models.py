@@ -18,8 +18,6 @@ class Category(models.Model):
     def get_absolute_url(self):
         return reverse('category_posts', kwargs={'slug': self.slug})
 
-# ДОБАВЛЕНО: Модель Тега
-
 
 class Tag(models.Model):
     name = models.CharField(max_length=50)
@@ -40,13 +38,15 @@ class Post(models.Model):
     image = models.ImageField(upload_to='posts_images/', null=True, blank=True)
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default='published')
+
     created_at = models.DateTimeField(auto_now_add=True)
+    # Добавлено поле автоматического обновления даты
+    updated_at = models.DateTimeField(auto_now=True)
+
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL,
                                  null=True, blank=True, related_name='posts', verbose_name="Категория")
-
-    # ДОБАВЛЕНО: Поле тегов (многие-ко-многим). blank=True позволяет постам быть без тегов.
     tags = models.ManyToManyField(
         Tag, blank=True, related_name='posts', verbose_name="Теги")
 
