@@ -2,13 +2,14 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home_page, name='home'),
-    path('posts/', views.post_list, name='post_list'),
-    path('post/add/', views.post_add, name='post_add'),
-    path('category/<slug:slug>/', views.category_posts, name='category_posts'),
-    path('tag/<slug:slug>/', views.tag_posts,
-         name='tag_posts'),  # Новый маршрут
-    path('post/<slug:slug>/', views.post_detail, name='post_detail'),
-    path('post/<slug:slug>/edit/', views.post_edit, name='post_edit'),
-    path('post/<slug:slug>/delete/', views.post_delete, name='post_delete'),
+    path('', views.HomeView.as_view(), name='home'),
+    path('posts/', views.PostListView.as_view(), name='post_list'),
+    path('post/add/', views.PostCreateView.as_view(), name='post_add'),
+    path('category/<slug:slug>/',
+         views.CategoryPostListView.as_view(), name='category_posts'),
+    path('tag/<slug:slug>/', views.TagPostListView.as_view(), name='tag_posts'),
+    path('post/<slug:slug>/', views.PostDetailView.as_view(), name='post_detail'),
+    path('post/<slug:slug>/edit/', views.PostUpdateView.as_view(), name='post_edit'),
+    path('post/<slug:slug>/delete/',
+         views.PostDeleteView.as_view(), name='post_delete'),
 ]

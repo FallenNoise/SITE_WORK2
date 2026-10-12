@@ -1,97 +1,110 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 from django.utils.text import slugify
 from unidecode import unidecode
 from .models import Post, Category, Tag
 from .forms import PostForm
 
 
-def home_page(request):
-    posts = Post.objects.all()[:3]
-    return render(request, 'pages/index.html', {'posts': posts})
+class HomeView(ListView):
+    model = Post
+    template_name = 'pages/index.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        return Post.objects.all()[:3]
 
 
-def post_list(request):
-    posts = Post.objects.all()
-    return render(request, 'pages/post_list.html', {'posts': posts})
+class PostListView(ListView):
+    model = Post
+    template_name = 'pages/post_list.html'
+    context_object_name = 'posts'
 
 
-def category_posts(request, slug):
-    category = get_object_or_404(Category, slug=slug)
-    posts = Post.objects.filter(category=category, status='published')
-    return render(request, 'pages/post_list.html', {'posts': posts, 'category': category})
+class CategoryPostListView(ListView):
+    model = Post
+    template_name = 'pages/post_list.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        self.category = get_object_or_404(Category, slug=self.kwargs['slug'])
+        return Post.objects.filter(category=self.category, status='published')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = self.category
+        return context
 
 
-def tag_posts(request, slug):
-    tag = get_object_or_404(Tag, slug=slug)
-    posts = Post.objects.filter(tags=tag, status='published')
-    return render(request, 'pages/post_list.html', {'posts': posts, 'tag': tag})
+class TagPostListView(ListView):
+    model = Post
+    template_name = 'pages/post_list.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        self.tag = get_object_or_404(Tag, slug=self.kwargs['slug'])
+        return Post.objects.filter(tags=self.tag, status='published')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tag'] = self.tag
+        return context
 
 
-def post_detail(request, slug):
-    post = get_object_or_404(Post, slug=slug)
-    return render(request, 'pages/post_detail.html', {'post': post})
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'pages/post_detail.html'
+    context_object_name = 'post'
 
 
-@login_required
-def post_add(request):
-    if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'pages/post_form.html'
+    success_url = reverse_lazy('home')
 
-            # Ручная обработка тегов
-            tags_str = form.cleaned_data.get('tags_input', '')
-            tag_names = [t.strip() for t in tags_str.split(',') if t.strip()]
-            for tag_name in tag_names:
-                tag_slug = slugify(unidecode(tag_name))
-                tag, _ = Tag.objects.get_or_create(
-                    slug=tag_slug, defaults={'name': tag_name})
-                post.tags.add(tag)
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        response = super().form_valid(form)
 
-            return redirect('home')
-    else:
-        form = PostForm()
-    return render(request, 'pages/post_form.html', {'form': form})
+        tags_str = form.cleaned_data.get('tags_input', '')
+        tag_names = [t.strip() for t in tags_str.split(',') if t.strip()]
+        for tag_name in tag_names:
+            tag_slug = slugify(unidecode(tag_name))
+            tag, _ = Tag.objects.get_or_create(
+                slug=tag_slug, defaults={'name': tag_name})
+            self.object.tags.add(tag)
+        return response
 
 
-@login_required
-def post_edit(request, slug):
-    post = get_object_or_404(Post, slug=slug)
-    if post.author != request.user:
-        return HttpResponseForbidden("Вы не можете редактировать чужой пост.")
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'pages/post_form.html'
 
-    if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES, instance=post)
-        if form.is_valid():
-            form.save()
+    def test_func(self):
+        return self.request.user == self.get_object().author
 
-            # Очищаем старые теги и сохраняем новые
-            post.tags.clear()
-            tags_str = form.cleaned_data.get('tags_input', '')
-            tag_names = [t.strip() for t in tags_str.split(',') if t.strip()]
-            for tag_name in tag_names:
-                tag_slug = slugify(unidecode(tag_name))
-                tag, _ = Tag.objects.get_or_create(
-                    slug=tag_slug, defaults={'name': tag_name})
-                post.tags.add(tag)
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self.object.tags.clear()
 
-            return redirect('post_detail', slug=post.slug)
-    else:
-        form = PostForm(instance=post)
-    return render(request, 'pages/post_form.html', {'form': form})
+        tags_str = form.cleaned_data.get('tags_input', '')
+        tag_names = [t.strip() for t in tags_str.split(',') if t.strip()]
+        for tag_name in tag_names:
+            tag_slug = slugify(unidecode(tag_name))
+            tag, _ = Tag.objects.get_or_create(
+                slug=tag_slug, defaults={'name': tag_name})
+            self.object.tags.add(tag)
+        return response
 
 
-@login_required
-def post_delete(request, slug):
-    post = get_object_or_404(Post, slug=slug)
-    if post.author != request.user:
-        return HttpResponseForbidden("Вы не можете удалить чужой пост.")
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Post
+    template_name = 'pages/post_confirm_delete.html'
+    success_url = reverse_lazy('post_list')
 
-    if request.method == 'POST':
-        post.delete()
-        return redirect('post_list')
-    return render(request, 'pages/post_confirm_delete.html', {'post': post})
+    def test_func(self):
+        return self.request.user == self.get_object().author
