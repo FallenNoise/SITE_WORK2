@@ -26,15 +26,14 @@ class ProfileView(ListView):
     model = Post
     template_name = 'users/profile.html'
     context_object_name = 'posts'
+    paginate_by = 5
 
     def get_queryset(self):
-        # Получаем пользователя по URL и фильтруем его посты
         self.profile_user = get_object_or_404(
             User, username=self.kwargs['username'])
         return Post.objects.filter(author=self.profile_user)
 
     def get_context_data(self, **kwargs):
-        # Добавляем пользователя в контекст, чтобы шаблон мог вывести его имя
         context = super().get_context_data(**kwargs)
         context['profile_user'] = self.profile_user
         return context
