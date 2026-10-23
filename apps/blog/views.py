@@ -21,12 +21,14 @@ class PostListView(ListView):
     model = Post
     template_name = 'pages/post_list.html'
     context_object_name = 'posts'
+    paginate_by = 5
 
 
 class CategoryPostListView(ListView):
     model = Post
     template_name = 'pages/post_list.html'
     context_object_name = 'posts'
+    paginate_by = 5
 
     def get_queryset(self):
         self.category = get_object_or_404(Category, slug=self.kwargs['slug'])
@@ -42,6 +44,7 @@ class TagPostListView(ListView):
     model = Post
     template_name = 'pages/post_list.html'
     context_object_name = 'posts'
+    paginate_by = 5
 
     def get_queryset(self):
         self.tag = get_object_or_404(Tag, slug=self.kwargs['slug'])
