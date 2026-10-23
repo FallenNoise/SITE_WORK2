@@ -61,6 +61,20 @@ class PostDetailView(DetailView):
     template_name = 'pages/post_detail.html'
     context_object_name = 'post'
 
+    # ДОБАВЛЕНО: Логика увеличения просмотров и сохранения пользователей
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+
+        # Увеличиваем счетчик общих просмотров (update_fields ускоряет запрос)
+        obj.views += 1
+        obj.save(update_fields=['views'])
+
+        # Добавляем пользователя в список посмотревших, если он авторизован
+        if self.request.user.is_authenticated:
+            obj.viewed_by_users.add(self.request.user)
+
+        return obj
+
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
