@@ -4,7 +4,6 @@ from django.utils.text import slugify
 from django.urls import reverse
 from unidecode import unidecode
 
-
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название категории")
     slug = models.SlugField(max_length=100, unique=True)
@@ -18,14 +17,12 @@ class Category(models.Model):
     def get_absolute_url(self):
         return reverse('category_posts', kwargs={'slug': self.slug})
 
-
 class Tag(models.Model):
     name = models.CharField(max_length=50)
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
-
 
 class Post(models.Model):
     STATUS_CHOICES = (
@@ -36,19 +33,20 @@ class Post(models.Model):
     slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
     text = models.TextField()
     image = models.ImageField(upload_to='posts_images/', null=True, blank=True)
-    status = models.CharField(
-        max_length=10, choices=STATUS_CHOICES, default='published')
-
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='published')
+    
     created_at = models.DateTimeField(auto_now_add=True)
-    # Добавлено поле автоматического обновления даты
-    updated_at = models.DateTimeField(auto_now=True)
-
-    author = models.ForeignKey(
-        User, on_delete=models.CASCADE, null=True, blank=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL,
-                                 null=True, blank=True, related_name='posts', verbose_name="Категория")
-    tags = models.ManyToManyField(
-        Tag, blank=True, related_name='posts', verbose_name="Теги")
+    updated_at = models.DateTimeField(auto_now=True) 
+    
+    # ДОБАВЛЕНО: Счетчик просмотров
+    views = models.PositiveIntegerField(default=0, verbose_name='Просмотры')
+    
+    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts', verbose_name="Категория")
+    tags = models.ManyToManyField(Tag, blank=True, related_name='posts', verbose_name="Теги")
+    
+    # ДОБАВЛЕНО: Отслеживание пользователей, просмотревших пост
+    viewed_by_users = models.ManyToManyField(User, related_name='viewed_posts', blank=True, verbose_name="Просмотрели пользователи")
 
     class Meta:
         ordering = ['-created_at']
