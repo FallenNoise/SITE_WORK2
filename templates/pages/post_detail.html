@@ -4,7 +4,7 @@
     <div class="col-md-8 card p-4 shadow-sm mb-4">
         <h1 class="mb-3">{{ post.title }}</h1>
         <p class="text-muted border-bottom pb-2">
-            <i>{{ post.created_at|date:"d.m.Y H:i" }}</i> | 
+            <i class="local-date" data-date="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"d.m.Y H:i" }}</i> |
             <b>Автор:</b> <a href="{% url 'profile' post.author.username %}" class="text-decoration-none">{{ post.author.username }}</a>
         </p>
 
