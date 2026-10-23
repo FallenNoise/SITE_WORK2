@@ -1,23 +1,40 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, ListView
 from apps.blog.models import Post
 
 
-def register_view(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')
-    else:
-        form = UserCreationForm()
-    return render(request, 'users/register.html', {'form': form})
+class RegisterView(CreateView):
+    form_class = UserCreationForm
+    template_name = 'users/register.html'
+    success_url = reverse_lazy('login')
 
 
-def profile_view(request, username):
-    profile_user = get_object_or_404(User, username=username)
-    posts = Post.objects.filter(author=profile_user)
-    return render(request, 'users/profile.html', {'profile_user': profile_user, 'posts': posts})
+class CustomLoginView(LoginView):
+    template_name = 'users/login.html'
+    next_page = 'home'
+
+
+class CustomLogoutView(LogoutView):
+    next_page = 'home'
+
+
+class ProfileView(ListView):
+    model = Post
+    template_name = 'users/profile.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        # Получаем пользователя по URL и фильтруем его посты
+        self.profile_user = get_object_or_404(
+            User, username=self.kwargs['username'])
+        return Post.objects.filter(author=self.profile_user)
+
+    def get_context_data(self, **kwargs):
+        # Добавляем пользователя в контекст, чтобы шаблон мог вывести его имя
+        context = super().get_context_data(**kwargs)
+        context['profile_user'] = self.profile_user
+        return context
