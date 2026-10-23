@@ -1,7 +1,13 @@
-<div class="post-card card mb-3 p-3 shadow-sm">
+<!-- Обязательно добавьте класс position-relative в обертку -->
+<div class="post-card card mb-3 p-3 shadow-sm position-relative">
+    
+    <!-- ДОБАВЛЕНО: Бейдж "Мой пост" -->
+    {% if request.user == post.author %}
+        <span class="badge bg-success position-absolute top-0 end-0 m-3 shadow-sm">Мой пост</span>
+    {% endif %}
+
     <h2>
-        <!-- Изменено post.pk на post.slug -->
-        <a href="{% url 'post_detail' post.slug %}" class="text-decoration-none text-dark">{{ post.title }}</a>
+        <a href="{{ post.get_absolute_url }}" class="text-decoration-none text-dark">{{ post.title }}</a>
     </h2>
     {% if post.author %}
         <p class="text-muted mb-0">
