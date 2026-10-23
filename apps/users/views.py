@@ -1,9 +1,10 @@
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.contrib.auth.views import LoginView, LogoutView
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
+
 from apps.blog.models import Post
 
 
