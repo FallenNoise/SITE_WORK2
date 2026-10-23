@@ -1,14 +1,17 @@
 {% extends 'base.html' %}
+{% load bootstrap_icons %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 card p-4 shadow-sm mb-4">
         <h1 class="mb-3">{{ post.title }}</h1>
+        
+        <!-- ДОБАВЛЕНО: Вывод счетчика просмотров с иконкой глаза -->
         <p class="text-muted border-bottom pb-2">
-            <i class="local-date" data-date="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"d.m.Y H:i" }}</i> |
-            <b>Автор:</b> <a href="{% url 'profile' post.author.username %}" class="text-decoration-none">{{ post.author.username }}</a>
+            <i class="local-date" data-date="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"d.m.Y H:i" }}</i> | 
+            <b>Автор:</b> <a href="{% url 'profile' post.author.username %}" class="text-decoration-none">{{ post.author.username }}</a> |
+            <span class="ms-2">{% bs_icon 'eye' %} {{ post.views }}</span>
         </p>
 
-        <!-- Блок с картинкой -->
         {% if post.image %}
             <div class="text-center mb-4">
                 <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid rounded" style="max-height: 500px; object-fit: cover;">
@@ -19,11 +22,21 @@
             {{ post.text }}
         </div>
         
+        <!-- ДОБАВЛЕНО: Блок со списком пользователей, которые просмотрели пост -->
+        {% if post.viewed_by_users.exists %}
+        <div class="mt-4 pt-3 border-top">
+            <h6 class="text-muted mb-2">Пост просмотрели ({{ post.viewed_by_users.count }}):</h6>
+            <div>
+                {% for viewer in post.viewed_by_users.all %}
+                    <a href="{% url 'profile' viewer.username %}" class="badge bg-secondary text-decoration-none me-1">{{ viewer.username }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         {% if request.user == post.author %}
-        <div class="mt-3">
-            <!-- Изменено post.pk на post.slug -->
+        <div class="mt-3 pt-3 border-top">
             <a href="{% url 'post_edit' post.slug %}" class="btn btn-outline-secondary btn-sm">Редактировать</a>
-            <!-- Изменено post.pk на post.slug -->
             <a href="{% url 'post_delete' post.slug %}" class="btn btn-outline-danger btn-sm">Удалить</a>
         </div>
         {% endif %}
