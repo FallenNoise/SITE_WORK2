@@ -1,11 +1,13 @@
-from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.text import slugify
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
 from unidecode import unidecode
-from .models import Post, Category, Tag
 from .forms import PostForm
+from .models import Category, Post, Tag
 
 
 class HomeView(ListView):
@@ -125,3 +127,29 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         return self.request.user == self.get_object().author
+
+
+class PostSearchView(ListView):
+    model = Post
+    template_name = 'pages/posts_search.html'
+    context_object_name = 'posts'
+    paginate_by = 5
+
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        if query:
+            # Поиск одновременно по заголовку, тексту, категории и тегам
+            return Post.objects.filter(
+                Q(title__icontains=query) |
+                Q(text__icontains=query) |
+                Q(category__name__icontains=query) |
+                Q(tags__name__icontains=query),
+                status='published'
+            ).distinct()
+        return Post.objects.none()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Сохраняем запрос пользователя, чтобы вывести его в шаблоне
+        context['query'] = self.request.GET.get('q', '')
+        return context

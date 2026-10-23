@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+<!-- Используем block.super для динамического title -->
+{% block title %}Поиск: {{ query }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Результаты поиска по запросу: "{{ query }}"</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            {% for post in posts %}
+                {% include 'includes/post_card.html' %}
+            {% empty %}
+                <p class="text-muted">По вашему запросу ничего не найдено. Попробуйте использовать другие ключевые слова.</p>
+            {% endfor %}
+
+            {% include 'includes/pagination.html' %}
+        </div>
+    </div>
+{% endblock %}
