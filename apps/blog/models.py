@@ -1,7 +1,7 @@
-from django.contrib.auth.models import User
 from django.db import models
-from django.urls import reverse
+from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.urls import reverse
 from unidecode import unidecode
 
 
@@ -42,8 +42,6 @@ class Post(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # ДОБАВЛЕНО: Счетчик просмотров
     views = models.PositiveIntegerField(default=0, verbose_name='Просмотры')
 
     author = models.ForeignKey(
@@ -52,10 +50,14 @@ class Post(models.Model):
                                  null=True, blank=True, related_name='posts', verbose_name="Категория")
     tags = models.ManyToManyField(
         Tag, blank=True, related_name='posts', verbose_name="Теги")
-
-    # ДОБАВЛЕНО: Отслеживание пользователей, просмотревших пост
     viewed_by_users = models.ManyToManyField(
         User, related_name='viewed_posts', blank=True, verbose_name="Просмотрели пользователи")
+
+    # Поля для лайков и дизлайков
+    liked_by_users = models.ManyToManyField(
+        User, related_name='liked_posts', blank=True, verbose_name="Лайкнули")
+    disliked_by_users = models.ManyToManyField(
+        User, related_name='disliked_posts', blank=True, verbose_name="Дизлайкнули")
 
     class Meta:
         ordering = ['-created_at']
