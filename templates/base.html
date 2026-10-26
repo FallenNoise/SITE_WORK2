@@ -5,7 +5,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- ДОБАВЛЕНО: Динамический тег title -->
     <title>{% block title %}BLOG{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
@@ -13,7 +12,6 @@
     <link rel="icon" href="{% static 'images/favicon.ico' %}">
 </head>
 <body class="bg-light">
-    <!-- Слегка стилизовали меню, добавив тень -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">Мой Блог</a>
@@ -22,7 +20,6 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <!-- Залитые иконки (-fill) при условии active -->
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
                             {% if request.path == '/' %}{% bs_icon 'house-fill' size='1.2em' %}{% else %}{% bs_icon 'house' size='1.2em' %}{% endif %} Главная
@@ -40,7 +37,6 @@
                     </li>
                 </ul>
 
-                <!-- ДОБАВЛЕНО: Форма поиска в навигации -->
                 <form class="d-flex me-3" action="{% url 'post_search' %}" method="GET">
                     <input class="form-control me-2" type="search" name="q" placeholder="Поиск постов..." value="{{ request.GET.q }}" aria-label="Search">
                     <button class="btn btn-outline-light" type="submit">{% bs_icon 'search' %}</button>
@@ -71,6 +67,17 @@
     </nav>
 
     <main class="container position-relative pb-5">
+        {% if messages %}
+            <div class="messages-container mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         {% block content %}{% endblock %}
         
         <button id="scrollToTopBtn" class="btn btn-primary rounded-circle shadow" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99; width: 50px; height: 50px;">
@@ -104,6 +111,17 @@
                         el.textContent = date.toLocaleString(undefined, options).replace(',', '');
                     }
                 }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 4000);
             });
         });
     </script>
