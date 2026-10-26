@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
@@ -19,6 +20,11 @@ class CustomLoginView(LoginView):
     template_name = 'users/login.html'
     next_page = 'home'
     form_class = CustomAuthenticationForm
+
+    def form_valid(self, form):
+        messages.success(
+            self.request, f"Добро пожаловать, {form.get_user().username}!")
+        return super().form_valid(form)
 
 
 class CustomLogoutView(LogoutView):
