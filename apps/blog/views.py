@@ -7,9 +7,9 @@ from django.utils.text import slugify
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from unidecode import unidecode
-
 from .forms import PostForm
 from .models import Category, Post, Tag
+from django.contrib import messages
 
 
 class HomeView(ListView):
@@ -90,6 +90,8 @@ class PostCreateView(LoginRequiredMixin, CreateView):
             tag, _ = Tag.objects.get_or_create(
                 slug=tag_slug, defaults={'name': tag_name})
             self.object.tags.add(tag)
+
+        messages.success(self.request, "Пост успешно создан!")
         return response
 
 
