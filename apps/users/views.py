@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
 
 from apps.blog.models import Post
+from .forms import CustomAuthenticationForm
 
 
 class RegisterView(CreateView):
@@ -17,6 +18,7 @@ class RegisterView(CreateView):
 class CustomLoginView(LoginView):
     template_name = 'users/login.html'
     next_page = 'home'
+    form_class = CustomAuthenticationForm
 
 
 class CustomLogoutView(LogoutView):
