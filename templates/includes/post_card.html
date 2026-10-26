@@ -1,7 +1,5 @@
-<!-- Обязательно добавьте класс position-relative в обертку -->
+{% load bootstrap_icons %}
 <div class="post-card card mb-3 p-3 shadow-sm position-relative">
-    
-    <!-- ДОБАВЛЕНО: Бейдж "Мой пост" -->
     {% if request.user == post.author %}
         <span class="badge bg-success position-absolute top-0 end-0 m-3 shadow-sm">Мой пост</span>
     {% endif %}
@@ -14,4 +12,19 @@
             <small>Автор: <a href="{% url 'profile' post.author.username %}">{{ post.author.username }}</a></small>
         </p>
     {% endif %}
+    
+    <div class="d-flex align-items-center mt-3 pt-2 border-top">
+        <form action="{% url 'post_like' post.slug %}" method="POST" class="d-inline me-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm {% if request.user in post.liked_by_users.all %}btn-success{% else %}btn-outline-success{% endif %}">
+                {% bs_icon 'hand-thumbs-up' %} {{ post.liked_by_users.count }}
+            </button>
+        </form>
+        <form action="{% url 'post_dislike' post.slug %}" method="POST" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm {% if request.user in post.disliked_by_users.all %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                {% bs_icon 'hand-thumbs-down' %} {{ post.disliked_by_users.count }}
+            </button>
+        </form>
+    </div>
 </div>

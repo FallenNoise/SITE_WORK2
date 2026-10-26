@@ -1,11 +1,13 @@
-from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db.models import Q
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.text import slugify
-from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
-                                  UpdateView)
+from django.views import View
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from unidecode import unidecode
+
 from .forms import PostForm
 from .models import Category, Post, Tag
 
@@ -63,18 +65,12 @@ class PostDetailView(DetailView):
     template_name = 'pages/post_detail.html'
     context_object_name = 'post'
 
-    # ДОБАВЛЕНО: Логика увеличения просмотров и сохранения пользователей
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
-
-        # Увеличиваем счетчик общих просмотров (update_fields ускоряет запрос)
         obj.views += 1
         obj.save(update_fields=['views'])
-
-        # Добавляем пользователя в список посмотревших, если он авторизован
         if self.request.user.is_authenticated:
             obj.viewed_by_users.add(self.request.user)
-
         return obj
 
 
@@ -87,7 +83,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         response = super().form_valid(form)
-
         tags_str = form.cleaned_data.get('tags_input', '')
         tag_names = [t.strip() for t in tags_str.split(',') if t.strip()]
         for tag_name in tag_names:
@@ -109,7 +104,6 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         self.object.tags.clear()
-
         tags_str = form.cleaned_data.get('tags_input', '')
         tag_names = [t.strip() for t in tags_str.split(',') if t.strip()]
         for tag_name in tag_names:
@@ -138,7 +132,6 @@ class PostSearchView(ListView):
     def get_queryset(self):
         query = self.request.GET.get('q')
         if query:
-            # Поиск одновременно по заголовку, тексту, категории и тегам
             return Post.objects.filter(
                 Q(title__icontains=query) |
                 Q(text__icontains=query) |
@@ -150,6 +143,29 @@ class PostSearchView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Сохраняем запрос пользователя, чтобы вывести его в шаблоне
         context['query'] = self.request.GET.get('q', '')
         return context
+
+
+class PostLikeView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        if request.user in post.disliked_by_users.all():
+            post.disliked_by_users.remove(request.user)
+        if request.user in post.liked_by_users.all():
+            post.liked_by_users.remove(request.user)
+        else:
+            post.liked_by_users.add(request.user)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+class PostDislikeView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        if request.user in post.liked_by_users.all():
+            post.liked_by_users.remove(request.user)
+        if request.user in post.disliked_by_users.all():
+            post.disliked_by_users.remove(request.user)
+        else:
+            post.disliked_by_users.add(request.user)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
