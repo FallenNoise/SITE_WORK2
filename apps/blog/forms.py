@@ -1,10 +1,8 @@
 from django import forms
-
-from .models import Post
+from .models import Post, Comment
 
 
 class PostForm(forms.ModelForm):
-    # Добавлено текстовое поле для ручного ввода тегов
     tags_input = forms.CharField(
         required=False,
         label='Теги',
@@ -15,7 +13,6 @@ class PostForm(forms.ModelForm):
 
     class Meta:
         model = Post
-        # Поле 'tags' убрано, так как обрабатывается вручную
         fields = ['title', 'text', 'category', 'image', 'status']
         labels = {
             'title': 'Заголовок',
@@ -38,7 +35,18 @@ class PostForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Если пост редактируется, подтягиваем его существующие теги в строку
         if self.instance and self.instance.pk:
             self.fields['tags_input'].initial = ', '.join(
                 [tag.name for tag in self.instance.tags.all()])
+
+# ДОБАВЛЕНО
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']
+        widgets = {
+            'text': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Оставьте свой комментарий...'}),
+        }
+        labels = {'text': ''}

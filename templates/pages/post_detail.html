@@ -34,6 +34,12 @@
                     {% bs_icon 'hand-thumbs-down' %} {{ post.disliked_by_users.count }}
                 </button>
             </form>
+            <form action="{% url 'post_favorite' post.slug %}" method="POST" class="d-inline ms-auto">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm {% if request.user in post.favorites.all %}btn-warning{% else %}btn-outline-warning{% endif %}" title="В избранное">
+                    {% bs_icon 'star-fill' %}
+                </button>
+            </form>
         </div>
         
         {% if post.viewed_by_users.exists %}
@@ -53,6 +59,38 @@
             <a href="{% url 'post_delete' post.slug %}" class="btn btn-outline-danger btn-sm">Удалить</a>
         </div>
         {% endif %}
+        
+        <div class="mt-5 pt-4 border-top">
+            <h3 class="mb-4">Комментарии ({{ comments.count }})</h3>
+            
+            {% if user.is_authenticated %}
+                <form action="{% url 'post_comment' post.slug %}" method="POST" class="mb-5">
+                    {% csrf_token %}
+                    {{ comment_form.as_p }}
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                </form>
+            {% else %}
+                <div class="alert alert-info">Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы оставить комментарий.</div>
+            {% endif %}
+
+            <div class="comments-list">
+                {% for comment in comments %}
+                    <div class="card mb-3 shadow-sm border-0 bg-light">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <h6 class="card-subtitle text-muted fw-bold">
+                                    {{ comment.author.username }}
+                                </h6>
+                                <small class="local-date text-muted" data-date="{{ comment.created_at|date:'c' }}">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <p class="card-text mb-0">{{ comment.text|linebreaksbr }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">Пока нет ни одного комментария. Будьте первым!</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
