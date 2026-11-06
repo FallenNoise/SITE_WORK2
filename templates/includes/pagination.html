@@ -1,31 +1,46 @@
-{% if is_paginated %}
-<nav aria-label="Навигация по страницам" class="mt-4">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Предыдущая</a>
-            </li>
-        {% else %}
-            <li class="page-item disabled"><span class="page-link">Предыдущая</span></li>
-        {% endif %}
-
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
-            {% else %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ num }}</a>
-                </li>
-            {% endif %}
-        {% endfor %}
-
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Следующая</a>
-            </li>
-        {% else %}
-            <li class="page-item disabled"><span class="page-link">Следующая</span></li>
-        {% endif %}
-    </ul>
-</nav>
+{% if page_obj.has_next %}
+    <div id="infinite-scroll-trigger" data-url="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="d-flex justify-content-center my-4 pb-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+    </div>
+    
+    <script>
+        (function() {
+            const trigger = document.getElementById('infinite-scroll-trigger');
+            if (!trigger) return;
+            
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    observer.unobserve(trigger);
+                    
+                    fetch(trigger.getAttribute('data-url'), {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const newCards = doc.querySelectorAll('.post-card');
+                        
+                        if (newCards.length > 0) {
+                            const container = trigger.parentElement;
+                            newCards.forEach(card => container.insertBefore(card, trigger));
+                            
+                            const newTrigger = doc.getElementById('infinite-scroll-trigger');
+                            if (newTrigger) {
+                                trigger.setAttribute('data-url', newTrigger.getAttribute('data-url'));
+                                observer.observe(trigger);
+                            } else {
+                                trigger.remove();
+                            }
+                        } else {
+                            trigger.remove();
+                        }
+                    });
+                }
+            });
+            observer.observe(trigger);
+        })();
+    </script>
 {% endif %}
