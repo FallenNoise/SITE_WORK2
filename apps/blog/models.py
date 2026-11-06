@@ -53,11 +53,14 @@ class Post(models.Model):
     viewed_by_users = models.ManyToManyField(
         User, related_name='viewed_posts', blank=True, verbose_name="Просмотрели пользователи")
 
-    # Поля для лайков и дизлайков
     liked_by_users = models.ManyToManyField(
         User, related_name='liked_posts', blank=True, verbose_name="Лайкнули")
     disliked_by_users = models.ManyToManyField(
         User, related_name='disliked_posts', blank=True, verbose_name="Дизлайкнули")
+
+    # ДОБАВЛЕНО: Поле для Избранного
+    favorites = models.ManyToManyField(
+        User, related_name='favorite_posts', blank=True, verbose_name="В избранном")
 
     class Meta:
         ordering = ['-created_at']
@@ -72,3 +75,23 @@ class Post(models.Model):
         if not self.slug:
             self.slug = slugify(unidecode(self.title))
         super().save(*args, **kwargs)
+
+# ДОБАВЛЕНО: Модель Комментариев
+
+
+class Comment(models.Model):
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, related_name='comments', verbose_name="Пост")
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, verbose_name="Автор")
+    text = models.TextField(verbose_name="Текст комментария")
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
+
+    def __str__(self):
+        return f'Комментарий {self.author.username} к {self.post.title}'

@@ -26,5 +26,13 @@
                 {% bs_icon 'hand-thumbs-down' %} {{ post.disliked_by_users.count }}
             </button>
         </form>
+        
+        <!-- ДОБАВЛЕНО: Кнопка "В избранное" -->
+        <form action="{% url 'post_favorite' post.slug %}" method="POST" class="d-inline ms-auto">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm {% if request.user in post.favorites.all %}btn-warning{% else %}btn-outline-warning{% endif %}" title="В избранное">
+                {% bs_icon 'star-fill' %}
+            </button>
+        </form>
     </div>
 </div>

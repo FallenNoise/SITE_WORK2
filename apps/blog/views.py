@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
 from django.http import HttpResponseRedirect
@@ -7,9 +8,9 @@ from django.utils.text import slugify
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from unidecode import unidecode
-from .forms import PostForm
-from .models import Category, Post, Tag
-from django.contrib import messages
+
+from .forms import PostForm, CommentForm
+from .models import Category, Post, Tag, Comment
 
 
 class HomeView(ListView):
@@ -73,6 +74,12 @@ class PostDetailView(DetailView):
             obj.viewed_by_users.add(self.request.user)
         return obj
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comment_form'] = CommentForm()
+        context['comments'] = self.object.comments.all()
+        return context
+
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
@@ -90,7 +97,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
             tag, _ = Tag.objects.get_or_create(
                 slug=tag_slug, defaults={'name': tag_name})
             self.object.tags.add(tag)
-
         messages.success(self.request, "Пост успешно создан!")
         return response
 
@@ -171,3 +177,39 @@ class PostDislikeView(LoginRequiredMixin, View):
         else:
             post.disliked_by_users.add(request.user)
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+class PostFavoriteView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        if request.user in post.favorites.all():
+            post.favorites.remove(request.user)
+            messages.info(request, "Пост удален из избранного.")
+        else:
+            post.favorites.add(request.user)
+            messages.success(request, "Пост добавлен в избранное!")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+class FavoritePostsListView(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = 'pages/favorite_posts.html'
+    context_object_name = 'posts'
+    paginate_by = 5
+
+    def get_queryset(self):
+        return self.request.user.favorite_posts.filter(status='published')
+
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        form.instance.post = get_object_or_404(Post, slug=self.kwargs['slug'])
+        messages.success(self.request, "Комментарий успешно добавлен!")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})

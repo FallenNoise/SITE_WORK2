@@ -35,6 +35,14 @@
                             {% if '/post/add/' in request.path %}{% bs_icon 'plus-square-fill' size='1.2em' %}{% else %}{% bs_icon 'plus-square' size='1.2em' %}{% endif %} Добавить пост
                         </a>
                     </li>
+                    <!-- ДОБАВЛЕНО: Ссылка на Избранное -->
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/favorites/' in request.path %}active{% endif %}" href="{% url 'favorite_posts' %}">
+                            {% if '/favorites/' in request.path %}{% bs_icon 'star-fill' size='1.2em' %}{% else %}{% bs_icon 'star' size='1.2em' %}{% endif %} Избранное
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
 
                 <form class="d-flex me-3" action="{% url 'post_search' %}" method="GET">
